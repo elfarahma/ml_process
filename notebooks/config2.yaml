@@ -34,13 +34,12 @@ print_debug: true
 
 # Columns by data type related
 
-float64_columns:
+int32_columns:
 - hdi
-- EFConsPerCap
 
 object_columns:
 - continent
-
+- EFConsPerCap
 
 
 # Predictors and label related
@@ -51,12 +50,11 @@ predictors:
 
 # Range of data related
 range_continent:
-- Asia
-- Europe
-- Africa
-- South America
-- Oceania
-- North America
+- DKI1 (Bunderan HI)
+- DKI2 (Kelapa Gading)
+- DKI3 (Jagakarsa)
+- DKI4 (Lubang Buaya)
+- DKI5 (Kebon Jeruk) Jakarta Barat
 range_hdi:
 - 0
 - 10
@@ -66,3 +64,14 @@ range_EFConsPerCap:
 - 20
 
 
+# Replacement for missing value related
+missing_value_pm10:
+  BAIK: 28
+  TIDAK BAIK: 55
+missing_value_pm25:
+  BAIK: 38
+  TIDAK BAIK: 82
+missing_value_so2: 35
+missing_value_co: 11
+missing_value_o3: 29
+missing_value_no2: 18

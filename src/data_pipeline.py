@@ -30,48 +30,29 @@ def read_raw_data(config: dict) -> pd.DataFrame:
     # Return raw dataset
     return raw_dataset
 
-def check_data(input_data, params, api = False):
+def check_data(input_data, params, api=False):
     input_data = copy.deepcopy(input_data)
     params = copy.deepcopy(params)
 
     if not api:
         # Check data types
-        assert input_data.select_dtypes("datetime").columns.to_list() == \
-            params["datetime_columns"], "an error occurs in datetime column(s)."
-        assert input_data.select_dtypes("object").columns.to_list() == \
-            params["object_columns"], "an error occurs in object column(s)."
-        assert input_data.select_dtypes("int").columns.to_list() == \
-            params["int32_columns"], "an error occurs in int32 column(s)."
+        assert input_data["continent"].dtype == "object", "an error occurs in continent column(s)."
+        assert input_data["hdi"].dtype == "float64", "an error occurs in hdi column(s)."
+        assert input_data["EFConsPerCap"].dtype == "float64", "an error occurs in EFConsPerCap column(s)."
     else:
         # In case checking data from api
-        # Predictor that has object dtype only stasiun
-        object_columns = params["object_columns"]
-        del object_columns[1:]
-
-        # Max column not used as predictor
-        int_columns = params["int32_columns"]
-        del int_columns[-1]
-
         # Check data types
-        assert input_data.select_dtypes("object").columns.to_list() == \
-            object_columns, "an error occurs in object column(s)."
-        assert input_data.select_dtypes("int").columns.to_list() == \
-            int_columns, "an error occurs in int32 column(s)."
+        assert input_data["continent"].dtype == "object", "an error occurs in continent column(s)."
+        assert input_data["hdi"].dtype == "float64", "an error occurs in hdi column(s)."
+        assert "EFConsPerCap" in input_data.columns, "EFConsPerCap column is missing."
 
-    assert set(input_data.stasiun).issubset(set(params["range_stasiun"])), \
-        "an error occurs in stasiun range."
-    assert input_data.pm10.between(params["range_pm10"][0], params["range_pm10"][1]).sum() == \
-        len(input_data), "an error occurs in pm10 range."
-    assert input_data.pm25.between(params["range_pm25"][0], params["range_pm25"][1]).sum() == \
-        len(input_data), "an error occurs in pm25 range."
-    assert input_data.so2.between(params["range_so2"][0], params["range_so2"][1]).sum() == \
-        len(input_data), "an error occurs in so2 range."
-    assert input_data.co.between(params["range_co"][0], params["range_co"][1]).sum() == \
-        len(input_data), "an error occurs in co range."
-    assert input_data.o3.between(params["range_o3"][0], params["range_o3"][1]).sum() == \
-        len(input_data), "an error occurs in o3 range."
-    assert input_data.no2.between(params["range_no2"][0], params["range_no2"][1]).sum() == \
-        len(input_data), "an error occurs in no2 range."
+    assert set(input_data.continent).issubset(set(params["range_continent"])), \
+        "an error occurs in continent range."
+    assert input_data.hdi.between(params["range_hdi"][0], params["range_hdi"][1]).sum() == \
+        len(input_data), "an error occurs in hdi range."
+    assert input_data.EFConsPerCap.between(params["range_EFConsPerCap"][0], params["range_EFConsPerCap"][1]).sum() == \
+        len(input_data), "an error occurs in EFConsPerCap range."
+    
 
 if __name__ == "__main__":
     # 1. Load configuration file
@@ -92,92 +73,47 @@ if __name__ == "__main__":
         config_data["raw_dataset_path"]
     )
 
-    # 5. Handling variable tanggal
-    raw_dataset.tanggal = pd.to_datetime(raw_dataset.tanggal)
+    # 5. Handling variable hdi
+    raw_dataset.hdi = raw_dataset.hdi.astype(float)
 
-    # 6. Handling variable pm10
-    raw_dataset.pm10 = raw_dataset.pm10.replace(
-        "---",
-        -1
-    ).astype(int)
+    # 6. Handling variable continent
+    raw_dataset.continent = raw_dataset.continent.astype(object)
 
-    # 7. Handling variable pm25
-    raw_dataset.pm25.fillna(
-        -1,
-        inplace = True
-    )
-    raw_dataset.pm25 = raw_dataset.pm25.replace(
-        "---",
-        -1
-    ).astype(int)
 
-    # 6. Handling variable so2
-    raw_dataset.so2 = raw_dataset.so2.replace(
-        "---",
-        -1
-    ).astype(int)
+    # 7. Handling variable EFConsPerCap
 
-    # 7. Handling variable co
-    raw_dataset.co = raw_dataset.co.replace(
-        "---",
-        -1
-    ).astype(int)
-
-    # 8. Handling variable o3
-    raw_dataset.o3 = raw_dataset.o3.replace(
-        "---",
-        -1
-    ).astype(int)
-
-    # 9. Handling variable no2
-    raw_dataset.no2 = raw_dataset.no2.replace(
-        "---",
-        -1
-    ).astype(int)
-
-    # 10. Handling variable max
-    max_index_trouble = raw_dataset[raw_dataset["max"] == "PM25"].index[0]
-    raw_dataset.loc[max_index_trouble, "max"] = 49
-    raw_dataset.loc[max_index_trouble, "critical"] = "PM10"
-    raw_dataset.loc[max_index_trouble, "categori"] = "BAIK"
-    raw_dataset["max"] = raw_dataset["max"].astype(int)
-
-    # 11. Handling variable categori
-    raw_dataset.drop(
-        index = raw_dataset[raw_dataset.categori == "TIDAK ADA DATA"].index,
-        inplace = True
-    )
+    raw_dataset.EFConsPerCap = raw_dataset.EFConsPerCap.astype(float)
     util.pickle_dump(
         raw_dataset,
         config_data["cleaned_raw_dataset_path"]
     )
 
-    # 12. Check data definition
+    # 8. Check data definition
     check_data(raw_dataset, config_data)
 
-    # 13. Splitting input output
+    # 9. Splitting input output
     x = raw_dataset[config_data["predictors"]].copy()
-    y = raw_dataset.categori.copy()
+    y = raw_dataset.EFConsPerCap.copy()
 
-    # 14. Splitting train test
+    # 10. Splitting train test
     x_train, x_test, \
     y_train, y_test = train_test_split(
         x, y,
-        test_size = 0.3,
+        test_size = 0.2,
         random_state = 42,
-        stratify = y
+       
     )
 
-    # 15. Splitting test valid
+    # 11. Splitting test valid
     x_valid, x_test, \
     y_valid, y_test = train_test_split(
         x_test, y_test,
-        test_size = 0.5,
+        test_size = 0.2,
         random_state = 42,
-        stratify = y_test
+        
     )
 
-    # 16. Save train, valid and test set
+    # 12. Save train, valid and test set
     util.pickle_dump(x_train, config_data["train_set_path"][0])
     util.pickle_dump(y_train, config_data["train_set_path"][1])
 
