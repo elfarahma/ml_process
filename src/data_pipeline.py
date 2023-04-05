@@ -101,7 +101,8 @@ if __name__ == "__main__":
         x, y,
         test_size = 0.2,
         random_state = 42,
-       
+        stratify = raw_dataset["continent"]
+    
     )
 
     # 11. Splitting test valid
@@ -110,10 +111,17 @@ if __name__ == "__main__":
         x_test, y_test,
         test_size = 0.2,
         random_state = 42,
-        
+        stratify = x_test["continent"]
+
     )
 
-    # 12. Save train, valid and test set
+    # 12. Convert hdi and EFConsPerCap columns back to their original data type
+    x_test["hdi"] = x_test["hdi"].astype(float)
+    x_valid["hdi"] = x_valid["hdi"].astype(float)
+    y_test = y_test.astype(float)
+    y_valid = y_valid.astype(float)
+
+    # 13. Save train, valid and test set
     util.pickle_dump(x_train, config_data["train_set_path"][0])
     util.pickle_dump(y_train, config_data["train_set_path"][1])
 
