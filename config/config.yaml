@@ -24,7 +24,8 @@ test_feng_set_path:
 raw_dataset_path: data/processed/raw_dataset.pkl
 cleaned_raw_dataset_path: data/processed/raw_dataset.pkl
 production_model_path: models/production_model.pkl
-ohe_stasiun_path: models/ohe_stasiun.pkl
+ohe_continent_path: models/ohe_continent.pkl
+test_path: models/ohe_continent.pkl
 le_encoder_path: models/le_encoder.pkl
 training_log_path: log/training_log.json
 
@@ -65,4 +66,14 @@ range_EFConsPerCap:
 - 0
 - 20
 
-
+# Replacement for missing value related
+missing_value_pm10:
+  BAIK: 28
+  TIDAK BAIK: 55
+missing_value_pm25:
+  BAIK: 38
+  TIDAK BAIK: 82
+missing_value_so2: 35
+missing_value_co: 11
+missing_value_o3: 29
+missing_value_no2: 18
