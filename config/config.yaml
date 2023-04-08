@@ -67,7 +67,7 @@ range_EFConsPerCap:
 - 20
 
 # Replacement for missing value related
-missing_value_pm10:
+missing_value_hdi:
   BAIK: 28
   TIDAK BAIK: 55
 missing_value_pm25:

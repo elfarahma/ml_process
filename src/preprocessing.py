@@ -197,15 +197,15 @@ if __name__ == "__main__":
 
     # 19. Dumping dataset
     x_train = {
-        "Undersampling" : train_set_rus.drop(columns = "continent"),
-        "Oversampling" : train_set_ros.drop(columns = "continent"),
-        "SMOTE" : train_set_sm.drop(columns = "continent")
+        "Undersampling" : train_set_rus.drop(columns = ["continent", "EFConsPerCap"]),
+        "Oversampling" : train_set_ros.drop(columns = ["continent", "EFConsPerCap"]),
+        "SMOTE" : train_set_sm.drop(columns = ["continent", "EFConsPerCap"])
     }
 
     y_train = {
-        "Undersampling" : train_set_rus.continent,
-        "Oversampling" : train_set_ros.continent,
-        "SMOTE" : train_set_sm.continent
+        "Undersampling" : train_set_rus.EFConsPerCap,
+        "Oversampling" : train_set_ros.EFConsPerCap,
+        "SMOTE" : train_set_sm.EFConsPerCap
     }
 
     util.pickle_dump(
@@ -218,19 +218,20 @@ if __name__ == "__main__":
     )
 
     util.pickle_dump(
-        valid_set.drop(columns = "continent"),
+        valid_set.drop(columns = ["EFConsPerCap", "continent"]),
         "data/processed/x_valid_feng.pkl"
     )
     util.pickle_dump(
-        valid_set.continent,
+        valid_set.EFConsPerCap,
         "data/processed/y_valid_feng.pkl"
     )
 
     util.pickle_dump(
-        test_set.drop(columns = "continent"),
+        test_set.drop(columns = ["EFConsPerCap", "continent"]),
         "data/processed/x_test_feng.pkl"
     )
     util.pickle_dump(
-        test_set.continent,
+        test_set.EFConsPerCap,
         "data/processed/y_test_feng.pkl"
     )
+
