@@ -157,7 +157,26 @@ if __name__ == "__main__":
     valid_set = nan_detector(valid_set)
     test_set = nan_detector(test_set)
 
-    
+        # 7. Handling Nan so2, co, o3, and no2
+    impute_values = {
+        "so2" : config_data["missing_value_so2"],
+        "co" : config_data["missing_value_co"],
+        "o3" : config_data["missing_value_o3"],
+        "no2" : config_data["missing_value_no2"]  
+    }
+
+    train_set.fillna(
+        value = impute_values,
+        inplace = True
+    )
+    valid_set.fillna(
+        value = impute_values,
+        inplace = True
+    )
+    test_set.fillna(
+        value = impute_values,
+        inplace = True
+    )
 
     # 8. Fit ohe with predefined continent data
     ohe_continent = ohe_fit(
