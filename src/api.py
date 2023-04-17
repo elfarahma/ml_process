@@ -7,18 +7,14 @@ import data_pipeline as data_pipeline
 import preprocessing as preprocessing
 
 config_data = util.load_config()
-ohe_stasiun = util.pickle_load(config_data["ohe_stasiun_path"])
-le_encoder = util.pickle_load(config_data["le_encoder_path"])
+ohe_continent = util.pickle_load(config_data["ohe_continent_path"])
 model_data = util.pickle_load(config_data["production_model_path"])
 
 class api_data(BaseModel):
-    stasiun : str
-    pm10 : int
-    pm25 : int
-    so2 : int
-    co : int
-    o3 : int
-    no2 : int
+    continent : str
+    hdi : float
+    EFConsPerCap : float
+
 
 app = FastAPI()
 
@@ -28,7 +24,7 @@ def home():
     return "Hello, FastAPI up!"
 
 # health check
-@app.get("/health/"):
+@app.get("/health/")
 def home():
     return "200"
 
@@ -41,7 +37,7 @@ def predict(data: api_data):
     data = pd.concat(
         [
             data[config_data["predictors"][0]],
-            data[config_data["predictors"][1:]].astype(int)
+            data[config_data["predictors"][1:]].astype(float)
         ],
         axis = 1
     )
@@ -54,13 +50,13 @@ def predict(data: api_data):
     
     #preprocessing data in serving
     # Encoding stasiun
-    data = preprocessing.ohe_transform(data, "stasiun", ohe_stasiun)
+    data = preprocessing.ohe_transform(data, "continent", ohe_continent)
 
     # Predict data
     y_pred = model_data["model_data"]["model_object"].predict(data)
 
     # Inverse tranform
-    y_pred = list(le_encoder.inverse_transform(y_pred))[0] 
+    #y_pred = list(le_encoder.inverse_transform(y_pred))[0] 
 
     return {"res" : y_pred, "error_msg": ""}
 

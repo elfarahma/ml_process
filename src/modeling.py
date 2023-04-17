@@ -1,16 +1,20 @@
-from sklearn.linear_model import LogisticRegression
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.neighbors import KNeighborsClassifier
-from xgboost import XGBClassifier
+from sklearn.linear_model import LinearRegression
 
-from sklearn.metrics import classification_report
-from sklearn.model_selection import RandomizedSearchCV
+from sklearn.ensemble import RandomForestRegressor
 
+from sklearn.tree import DecisionTreeRegressor
+
+from sklearn.metrics import classification_report, ConfusionMatrixDisplay, roc_curve, roc_auc_score
+from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error
+from sklearn.metrics import r2_score
+from sklearn.model_selection import RandomizedSearchCV, GridSearchCV
+
+import joblib
 import json
 import pandas as pd
 import copy
 import hashlib
+import os
 
 import util as util
 
@@ -65,7 +69,7 @@ def training_log_template() -> dict:
         "training_time" : [],
         "training_date" : [],
         "performance" : [],
-        "f1_score_avg" : [],
+        "r2_score" : [],
         "data_configurations" : [],
     }
 
@@ -114,19 +118,16 @@ def create_model_object(params: dict) -> list:
     util.print_debug("Creating model objects.")
 
     # Create model objects
-    lgr = LogisticRegression()
-    dct = DecisionTreeClassifier()
-    rfc = RandomForestClassifier()
-    knn = KNeighborsClassifier()
-    xgb = XGBClassifier()
+    lr = LinearRegression()
+    rfr = RandomForestRegressor()
+    dct = DecisionTreeRegressor()
 
     # Create list of model
     list_of_model = [
-        { "model_name": lgr.__class__.__name__, "model_object": lgr, "model_uid": ""},
+        { "model_name": lr.__class__.__name__, "model_object": lr, "model_uid": ""},
+        { "model_name": rfr.__class__.__name__, "model_object": rfr, "model_uid": ""},
         { "model_name": dct.__class__.__name__, "model_object": dct, "model_uid": ""},
-        { "model_name": rfc.__class__.__name__, "model_object": rfc, "model_uid": ""},
-        { "model_name": knn.__class__.__name__, "model_object": knn, "model_uid": ""},
-        { "model_name": xgb.__class__.__name__, "model_object": xgb, "model_uid": ""}
+       
     ]
 
     # Debug message
@@ -180,7 +181,8 @@ def train_eval(configuration_model: str, params: dict, hyperparams_model: list =
 
             # Evaluation
             y_predict = model["model_object"].predict(x_valid)
-            performance = classification_report(y_valid, y_predict, output_dict = True)
+            performance = mean_squared_error(y_valid, y_predict)
+            r2 = r2_score(y_valid, y_predict)
 
             # Debug message
             util.print_debug("Logging: {}".format(model["model_name"]))
@@ -197,7 +199,7 @@ def train_eval(configuration_model: str, params: dict, hyperparams_model: list =
             training_log["training_time"].append(training_time)
             training_log["training_date"].append(util.time_stamp())
             training_log["performance"].append(performance)
-            training_log["f1_score_avg"].append(performance["macro avg"]["f1-score"])
+            training_log["r2_score"].append(r2)
             training_log["data_configurations"].append(config_data)
 
             # Collect current trained model
@@ -237,12 +239,21 @@ def get_production_model(list_of_model, training_log, params):
     util.print_debug("Trying to load previous production model.")
 
     # Check if there is a previous production model
-    try:
-        prev_production_model = util.pickle_load(params["production_model_path"])
-        util.print_debug("Previous production model loaded.")
+    if os.path.exists(params["production_model_path"]):
+        try:
+            # Load the previous production model using JSON
+            with open(params["production_model_path"], 'r') as f:
+                serialized_model = f.read()
+                prev_production_model = json.loads(serialized_model)
+            util.print_debug("Previous production model loaded.")
 
-    except FileNotFoundError as fe:
+        except Exception as e:
+            util.print_debug("Failed to load previous production model: {}".format(str(e)))
+            prev_production_model = None
+
+    else:
         util.print_debug("No previous production model detected, choosing best model only from current trained model.")
+        prev_production_model = None
 
     # If previous production model detected:
     if prev_production_model != None:
@@ -280,7 +291,7 @@ def get_production_model(list_of_model, training_log, params):
 
             # Update their performance log
             prev_production_model["model_log"]["performance"] = eval_res
-            prev_production_model["model_log"]["f1_score_avg"] = eval_res["macro avg"]["f1-score"]
+            prev_production_model["model_log"]["r2_score"] = eval_res["r2-score"]
 
             # Debug message
             util.print_debug("Adding previous model data to current training log and list of model")
@@ -298,10 +309,10 @@ def get_production_model(list_of_model, training_log, params):
             util.print_debug("Different features between production model with current dataset is detected, ignoring production dataset.")
 
     # Debug message
-    util.print_debug("Sorting training log by f1 macro avg and training time.")
+    util.print_debug("Sorting training log by r2 score and training time.")
 
-    # Sort training log by f1 score macro avg and trining time
-    best_model_log = training_log.sort_values(["f1_score_avg", "training_time"], ascending = [False, True]).iloc[0]
+    # Sort training log by MSE, r2 score and training time
+    best_model_log = training_log.sort_values(["performance","r2_score", "training_time"], ascending = [True, False, True]).iloc[0]
     
     # Debug message
     util.print_debug("Searching model data based on sorted training log.")
@@ -333,39 +344,36 @@ def get_production_model(list_of_model, training_log, params):
 
 def create_dist_params(model_name: str) -> dict:
     # Define models paramteres
-    dist_params_xgb = {
-        "n_estimators" : [50, 100, 200, 300, 400, 500]
+
+
+    dist_params_lr = {
+        'fit_intercept': [True, False],
+        'normalize': [True, False],
+        'copy_X': [True, False]
     }
+    
+    dist_params_rfr = {
+        'n_estimators': [100, 200, 300],
+        'max_depth': [5, 10, 15],
+        'min_samples_split': [2, 5, 10],
+        'min_samples_leaf': [1, 2, 4],
+        'max_features': ['auto', 'sqrt', 'log2']
+    }
+    
     dist_params_dct = {
-        "criterion" : ["gini", "entropy", "log_loss"],
-        "min_samples_split" : [2, 4, 6, 10, 15, 20, 25],
-        "min_samples_leaf" : [2, 4, 6, 10, 15, 20, 25]
+        'max_depth': [2, 4, 6, 8],
+        'min_samples_split': [2, 5, 10],
+        'min_samples_leaf': [1, 2, 4],
+        'max_features': ['auto', 'sqrt', 'log2']
     }
-    dist_params_knn = {
-        "algorithm" : ["ball_tree", "kd_tree", "brute"],
-        "n_neighbors" : [2, 3, 4, 5, 6, 10, 15, 20, 25],
-        "leaf_size" : [2, 3, 4, 5, 6, 10, 15, 20, 25],
-    }
-    dist_params_lgr = {
-        "penalty" : ["l1", "l2", "elasticnet", "none"],
-        "C" : [0.01, 0.05, 0.10, 0.15, 0.20, 0.30, 0.60, 0.90, 1],
-        "solver" : ["saga"],
-        "max_iter" : [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
-    }
-    dist_params_rfc = {
-        "criterion" : ["gini", "entropy", "log_loss"],
-        "n_estimators" : [50, 100, 200, 300, 400, 500],
-        "min_samples_split" : [2, 4, 6, 10, 15, 20, 25],
-        "min_samples_leaf" : [2, 4, 6, 10, 15, 20, 25]
-    }
+
 
     # Make all models parameters in to one
     dist_params = {
-        "XGBClassifier": dist_params_xgb,
-        "DecisionTreeClassifier": dist_params_dct,
-        "KNeighborsClassifier": dist_params_knn,
-        "LogisticRegression": dist_params_lgr,
-        "RandomForestClassifier": dist_params_rfc
+        "DecisionTreeRegressor": dist_params_dct,
+        "RandomForestRegressor": dist_params_rfr,
+        "LinearRegression": dist_params_lr
+        
     }
 
     # Return distribution of model parameters

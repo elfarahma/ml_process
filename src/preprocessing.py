@@ -39,6 +39,9 @@ def nan_detector(set_data: pd.DataFrame) -> pd.DataFrame:
     # Create copy of set data
     set_data = set_data.copy()
 
+    # Drop rows that have a null value in the "continent" column
+    set_data.dropna(subset=["continent"], inplace=True)
+    
     # Replace -1 with NaN
     set_data.replace(
         -1, np.nan,
@@ -157,12 +160,11 @@ if __name__ == "__main__":
     valid_set = nan_detector(valid_set)
     test_set = nan_detector(test_set)
 
-        # 7. Handling Nan so2, co, o3, and no2
+    # 7. Handling Nan hdi & EFConsPerCap
     impute_values = {
-        "so2" : config_data["missing_value_so2"],
-        "co" : config_data["missing_value_co"],
-        "o3" : config_data["missing_value_o3"],
-        "no2" : config_data["missing_value_no2"]  
+        "hdi" : config_data["missing_value_hdi"],
+        "EFConsPerCap" : config_data["missing_value_EFConsPerCap"]
+        
     }
 
     train_set.fillna(
