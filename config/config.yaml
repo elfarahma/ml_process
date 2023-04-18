@@ -67,13 +67,19 @@ range_EFConsPerCap:
 - 20
 
 # Replacement for missing value related
+
 missing_value_hdi:
-  BAIK: 28
-  TIDAK BAIK: 55
-missing_value_pm25:
-  BAIK: 38
-  TIDAK BAIK: 82
-missing_value_so2: 35
-missing_value_co: 11
-missing_value_o3: 29
-missing_value_no2: 18
+  Asia: 0.6774645669291338
+  Europe: 0.8375
+  Africa: 0.4634999999999999
+  South America: 0.7121287878787879
+  Oceania: 0.6976736842105266
+  North America: 0.699756906077348
+missing_value_EFConsPerCap:
+  Asia: 3.4676567535511817
+  Europe: 5.184596045999999
+  Africa: 1.36272604
+  South America: 3.3626520505227298
+  Oceania: 3.6006926000315795
+  North America: 3.0277224508563543
+
