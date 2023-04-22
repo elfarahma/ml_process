@@ -3,7 +3,7 @@ import numpy as np
 import util as util
 from imblearn.under_sampling import RandomUnderSampler
 from imblearn.over_sampling import RandomOverSampler, SMOTE
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import OneHotEncoder
 
 def load_dataset(config_data: dict) -> pd.DataFrame:
@@ -39,9 +39,6 @@ def nan_detector(set_data: pd.DataFrame) -> pd.DataFrame:
     # Create copy of set data
     set_data = set_data.copy()
 
-    # Drop rows that have a null value in the "continent" column
-    set_data.dropna(subset=["continent"], inplace=True)
-    
     # Replace -1 with NaN
     set_data.replace(
         -1, np.nan,
@@ -67,7 +64,7 @@ def ohe_fit(data_tobe_fitted: dict, ohe_path: str) -> OneHotEncoder:
     # Return trained ohe
     return ohe_continent
 
-def ohe_transform(set_data: pd.DataFrame, tranformed_column: str, ohe_path: str) -> pd.DataFrame:
+def ohe_transform(set_data: pd.DataFrame, transformed_column: str, ohe_path: str) -> pd.DataFrame:
     # Create copy of set data
     set_data = set_data.copy()
 
@@ -75,7 +72,7 @@ def ohe_transform(set_data: pd.DataFrame, tranformed_column: str, ohe_path: str)
     ohe_continent = util.pickle_load(ohe_path)
 
     # Transform variable stasiun of set data, resulting array
-    continent_features = ohe_continent.transform(np.array(set_data[tranformed_column].to_list()).reshape(-1, 1))
+    continent_features = ohe_continent.transform(np.array(set_data[transformed_column].to_list()).reshape(-1, 1))
 
     # Convert to dataframe
     continent_features = pd.DataFrame(continent_features.tolist(), columns = list(ohe_continent.categories_[0]))
@@ -86,9 +83,6 @@ def ohe_transform(set_data: pd.DataFrame, tranformed_column: str, ohe_path: str)
     # Concatenate new features with original set data
     set_data = pd.concat([continent_features, set_data], axis = 1)
 
-    # Drop continent column
-    #set_data.drop(columns = "continent", inplace = True)
-
     # Convert columns type to string
     new_col = [str(col_name) for col_name in set_data.columns.to_list()]
     set_data.columns = new_col
@@ -96,6 +90,8 @@ def ohe_transform(set_data: pd.DataFrame, tranformed_column: str, ohe_path: str)
     # Return new feature engineered set data
     return set_data
 
+
+    
 
 def rus_fit_resample(set_data: pd.DataFrame) -> pd.DataFrame:
     # Create copy of set data
@@ -145,7 +141,25 @@ def sm_fit_resample(set_data: pd.DataFrame) -> pd.DataFrame:
     # Return balanced data
     return set_data_sm
 
+def standardizerData(set_data: pd.DataFrame) -> pd.DataFrame:
+    
+    continent_column = set_data.continent
+    set_data = set_data.drop("continent", axis = 1)
+    data_columns = set_data.columns  # agar nama kolom tidak hilang
+    data_index = set_data.index  # agar index tidak hilang
 
+    # buat (fit) standardizer
+    standardizer = StandardScaler()
+    standardizer.fit(set_data)
+
+    # transform data
+    standardized_data_raw = standardizer.transform(set_data)
+    set_data = pd.DataFrame(standardized_data_raw)
+    set_data.columns = data_columns
+    set_data.index = data_index
+    set_data = pd.concat([set_data, continent_column], axis = 1)
+    
+    return set_data
 
 if __name__ == "__main__":
     # 1. Load configuration file
@@ -186,7 +200,7 @@ if __name__ == "__main__":
         config_data["ohe_continent_path"]
     )
 
-    # 9. Transform stasiun on train, valid, and test set
+    # 9. Transform continent on train, valid, and test set
     train_set = ohe_transform(
         train_set,
         "continent",
@@ -205,18 +219,32 @@ if __name__ == "__main__":
         config_data["ohe_continent_path"]
     )
 
-    # 10. Undersampling dataset
+    # 10. Standardization on train, valid, and test set
+    train_set = standardizerData(
+        train_set
+    )
+
+    valid_set = standardizerData(
+        valid_set
+    )
+
+    test_set = standardizerData(
+        test_set
+    )
+
+    
+    # 11. Undersampling dataset
     train_set_rus = rus_fit_resample(train_set)
 
-    # 11. Oversampling dataset
+    # 12. Oversampling dataset
     train_set_ros = ros_fit_resample(train_set)
 
-    # 12. SMOTE dataset
+    # 13. SMOTE dataset
     train_set_sm = sm_fit_resample(train_set)
 
     
 
-    # 19. Dumping dataset
+    # 14. Dumping dataset
     x_train = {
         "Undersampling" : train_set_rus.drop(columns = ["continent", "EFConsPerCap"]),
         "Oversampling" : train_set_ros.drop(columns = ["continent", "EFConsPerCap"]),
@@ -228,6 +256,7 @@ if __name__ == "__main__":
         "Oversampling" : train_set_ros.EFConsPerCap,
         "SMOTE" : train_set_sm.EFConsPerCap
     }
+
 
     util.pickle_dump(
         x_train,

@@ -4,8 +4,7 @@ from sklearn.ensemble import RandomForestRegressor
 
 from sklearn.tree import DecisionTreeRegressor
 
-from sklearn.metrics import classification_report, ConfusionMatrixDisplay, roc_curve, roc_auc_score
-from sklearn.metrics import mean_squared_error, mean_absolute_percentage_error
+from sklearn.metrics import mean_squared_error
 from sklearn.metrics import r2_score
 from sklearn.model_selection import RandomizedSearchCV, GridSearchCV
 
@@ -281,7 +280,7 @@ def get_production_model(list_of_model, training_log, params):
             y_pred = prev_production_model["model_data"]["model_object"].predict(x_valid)
 
             # Re-asses prediction result
-            eval_res = classification_report(y_valid, y_pred, output_dict = True)
+            eval_res = mean_squared_error(y_valid, y_pred, output_dict = True)
 
             # Debug message
             util.print_debug("Assessing complete.")

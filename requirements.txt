@@ -59,5 +59,4 @@ urllib3==1.26.12
 uvicorn==0.19.0
 validators==0.20.0
 watchdog==2.1.9
-xgboost==1.7.1
 zipp==3.10.0

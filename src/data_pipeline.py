@@ -74,15 +74,27 @@ if __name__ == "__main__":
     )
 
     # 5. Handling variable hdi
+    raw_dataset.hdi.fillna(
+        -1,
+        inplace = True
+    )
     raw_dataset.hdi = raw_dataset.hdi.astype(float)
 
     # 6. Handling variable continent
+    raw_dataset.continent.fillna(
+        -1,
+        inplace = True
+    )
     raw_dataset.continent = raw_dataset.continent.astype(object)
 
 
     # 7. Handling variable EFConsPerCap
-
+    raw_dataset.EFConsPerCap.fillna(
+        -1,
+        inplace = True
+    )
     raw_dataset.EFConsPerCap = raw_dataset.EFConsPerCap.astype(float)
+    
     util.pickle_dump(
         raw_dataset,
         config_data["cleaned_raw_dataset_path"]

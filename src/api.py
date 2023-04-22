@@ -11,8 +11,8 @@ ohe_continent = util.pickle_load(config_data["ohe_continent_path"])
 model_data = util.pickle_load(config_data["production_model_path"])
 
 class api_data(BaseModel):
-    continent : str
     hdi : float
+    continent : object
     EFConsPerCap : float
 
 
@@ -37,7 +37,7 @@ def predict(data: api_data):
     data = pd.concat(
         [
             data[config_data["predictors"][0]],
-            data[config_data["predictors"][1:]].astype(float)
+            data[config_data["predictors"][1:]]
         ],
         axis = 1
     )
@@ -49,14 +49,11 @@ def predict(data: api_data):
         return {"res": [], "error_msg": str(ae)}
     
     #preprocessing data in serving
-    # Encoding stasiun
+    # Encoding contiinent
     data = preprocessing.ohe_transform(data, "continent", ohe_continent)
 
     # Predict data
     y_pred = model_data["model_data"]["model_object"].predict(data)
-
-    # Inverse tranform
-    #y_pred = list(le_encoder.inverse_transform(y_pred))[0] 
 
     return {"res" : y_pred, "error_msg": ""}
 
