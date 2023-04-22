@@ -18,7 +18,7 @@ Proyek ini bertujuan untuk mengembangkan model machine learning untuk memprediks
 
    Pada langkah ini, akan dilakukan kegiatan-kegiatan berikut:
 
-   - Pengumpulan data (lebih detil dapat dilihat pada Bab 4.1)
+   - Pengumpulan data
    - Pendefinisian data, yaitu menentukan lingkup dan batasan nilai data yang meliputi rentang nilai pada kolom numerikal (HDI, EFConsPerCap), tipe data (str, int, float, dll), serta batasan kelas pada kolom kategorikal (continent).
    - Validasi data, yakni memastikan bahwa setiap entry pada dataset sudah sesuai dengan batasan yang ditentukan dalam pendefinisian data.
    - Data defense, mekanisme warning apabila ada entry data dari API yang tidak sesuai dengan pendefinisian data.
@@ -57,6 +57,7 @@ Proyek ini bertujuan untuk mengembangkan model machine learning untuk memprediks
 
 # Documentation
 
+
 ## Format Data untuk Prediksi melalui API
 
 1. Format data: API ini memerlukan data masukan dalam format CSV.
@@ -71,9 +72,16 @@ Proyek ini bertujuan untuk mengembangkan model machine learning untuk memprediks
 
 6. Encoding: File CSV harus di-encode dalam format UTF-8.
 
+## Format Prediksi dari API
+
+- Nilai prediksi Ecological Footprint per Capita
+
+## Workflow
+
+![My Image](https://github.com/elfarahma/ml_process/blob/7748dd6e4767be8f1faea4bab34182a85d430dcd/ML%20Process.jpg)
 
 
-## Deskripsi Dataset
+# Deskripsi Dataset
 
 Dataset yang digunakan dalam proyek ini adalah dataset time series tahunan dengan rentang waktu dari tahun 2000 sampai dengan 2014 yang mencakup data profil negara-negara seluruh dunia. Total entry yang termaktub dalam dataset tersebut adalah 2156 poin data. Dataset ini merupakan data repository Github yang diolah dengan menggabungkan data dari World Bank dan data dari Global Footprint Network (Shropshire, 2019).
 
@@ -97,11 +105,35 @@ Dari dataset di atas, fitur yang digunakan untuk memprediksi nilai Ecological Fo
 Sedangkan untuk parameter ecological footprint yang akan diprediksi adalah Ecological Footprint Per Capita (EFConsPerCap).
 
 # Bagaimana menggunakannya
+Untuk menggunakan model machine learning ini, Anda dapat mengirimkan permintaan POST ke API endpoint dengan payload input sebagai berikut:
 
-..... do it later
+```
+{
+    "hdi": 0.7,
+    "continent": "Asia"
+}
 
+```
+# Format Project Output
+
+Bila berhasil, maka Anda akan mendapat hasil prediksi dengan format berikut:
+
+```
+{
+    "res": 5.7
+}
+
+```
 # Kesimpulan dan Referensi
 
-Referensi: 
+## Kesimpulan
+- Setelah dilakukan sesi training dan evaluasi dengan tiga model regresi. Didapat bahwa model regresi dengan performa terbaik adalah Random Forest Regressor dengan metode SMOTE untuk penanganan imbalance data. Model training  dengan hyper-parameter tuning menunjukkan performa dari metriks MSE dan R-square yang lebih baik daripada yang tidak. Namun waktu latih bertambah  cukup signifikan. 
+
+- Outlier pada dataset ini sangat terkait dengan fitur “continent”. Pengklasifikasian wilayah ke dalam kategori benua adalah pengkerucutan dari kategori negara. Namun pengekerucutan ini dapat dikatakan terlalu sederhana dan tidak representatif. Fitur benua pada kategori Eropa menunjukkan 70% data berada pada ranah HDI yang tinggi, tetapi tidak berdistribusi normal dan condong (skewing) sebelah kanan. Ini menunjukkan adanya outlier pada sebelah kiri. Hal serupa juga ditunjukkan pada hubungan antara fitur benua dan nilai EF per kapita, terlihat bahwa semua kategori memiliki kecenderungan condong ke sebelah kiri.
+
+- Untuk pengembangan dan peningkatan performa model, perlu melakukan pengecilan ruang lingkup model ML dalam project ini. Dimana skalanya diperkecil dari skala "world" menjadi "region" contohnya Asia Tenggara, Eropa Tengah, Afrika Utara, dll. Dengan demikian karakteristik suatu negara dapat lebih tertangkap, namun jumlah kelas tidak terlalu besar.
 
 
+## Referensi
+
+Shropshire, A. (2019). HDI vs Ecology Plotly. Github. https://github.com/as6140/hdi_v_ecology_plotly_blog
