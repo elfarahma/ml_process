@@ -2,9 +2,9 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 import uvicorn
 import pandas as pd
-import util as util
-import data_pipeline as data_pipeline
-import preprocessing as preprocessing
+import src.util as util
+import src.data_pipeline as data_pipeline
+import src.preprocessing as preprocessing
 
 config_data = util.load_config()
 ohe_continent = util.pickle_load(config_data["ohe_continent_path"])
@@ -49,7 +49,7 @@ def predict(data: api_data):
         return {"res": [], "error_msg": str(ae)}
     
     #preprocessing data in serving
-    # Encoding contiinent
+    # Encoding continent
     data = preprocessing.ohe_transform(data, "continent", ohe_continent)
 
     # Predict data
