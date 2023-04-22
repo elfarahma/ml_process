@@ -57,7 +57,6 @@ Proyek ini bertujuan untuk mengembangkan model machine learning untuk memprediks
 
 # Documentation
 
-
 ## Format Data untuk Prediksi melalui API
 
 1. Format data: API ini memerlukan data masukan dalam format CSV.
@@ -96,6 +95,12 @@ Dari dataset di atas, fitur yang digunakan untuk memprediksi nilai Ecological Fo
 - Continent ("continent")
 
 Sedangkan untuk parameter ecological footprint yang akan diprediksi adalah Ecological Footprint Per Capita (EFConsPerCap).
+
+# Bagaimana menggunakannya
+
+..... do it later
+
+# Kesimpulan dan Referensi
 
 Referensi: 
 
