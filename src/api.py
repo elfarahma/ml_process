@@ -2,9 +2,9 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 import uvicorn
 import pandas as pd
-import src.util as util
-import src.data_pipeline as data_pipeline
-import src.preprocessing as preprocessing
+import util as util
+import data_pipeline as data_pipeline
+import preprocessing as preprocessing
 
 config_data = util.load_config()
 ohe_continent = util.pickle_load(config_data["ohe_continent_path"])
