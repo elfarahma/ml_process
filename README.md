@@ -78,7 +78,7 @@ Proyek ini bertujuan untuk mengembangkan model machine learning untuk memprediks
 
 ## Workflow
 
-![My Image](https://github.com/elfarahma/ml_process/blob/7748dd6e4767be8f1faea4bab34182a85d430dcd/ML%20Process.jpg)
+![My Image](https://github.com/elfarahma/ml_process/blob/9a710b8c613ff38bddf6467da5364de29ecb18fa/ML_Process.jpg)
 
 
 # Deskripsi Dataset
